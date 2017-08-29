@@ -67,9 +67,10 @@ class net(object):
                     mov.set(cv2.CAP_PROP_POS_MSEC,shift_time*1000)
                     for tIdx in range(self.nLength):
                         ret, frame = mov.read()
+                        if not ret: continue # 基本的に、長さ上は絶対に終端までは来ないので、retが帰ってこないのは単なるエラー
+                        #if tIdx==0: print mov.get(cv2.CAP_PROP_POS_FRAMES)
                         frame = cv2.resize(frame,(self.sizeX,self.sizeY))
                         batchX[bIdx,tIdx] = frame
-                        if not ret: break
                     mov.release()
                     bIdx += 1
                 except:
@@ -92,6 +93,7 @@ class net(object):
         visModelAll = TimeDistributed(cnnModel)(inX)
         visFlatten  = Reshape((self.nLength,-1))(visModelAll)
         gruModel    = GRU(self.nGRU)(visFlatten)
+        gruModel    = Dropout(0.5)(gruModel)
         logits      = Dense(self.nActivities)(gruModel)
         output      = Activation("softmax",name="cls")(logits)
 
@@ -111,7 +113,7 @@ class net(object):
     def train(self):
         cp_cb = ModelCheckpoint(filepath = self.saveFolder+"/weights.{epoch:02d}.hdf5", monitor='loss', verbose=1, save_best_only=True, mode='auto')
         tb_cb = TensorBoard(log_dir=self.saveFolder, histogram_freq=1)
-        lr_cb = ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=5, min_lr=1e-10)
+        lr_cb = ReduceLROnPlateau(monitor='loss', factor=0.1, patience=3, min_lr=1e-10, epsilon=0.01, verbose=1)
 
         self.model.fit_generator(generator=self.yieldOne("all"),
                                 epochs=100000000,
@@ -143,13 +145,13 @@ class net(object):
 
 if __name__=="__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--nBatch" ,"-b",dest="nBatch",type=int,default=2)
-    parser.add_argument("--nGRU"   ,"-g",dest="nGRU"  ,type=int,default=4096)
-    parser.add_argument("--nLength","-l",dest="nLength"  ,type=int,default=60)
-    parser.add_argument("--learnRate",dest="learnRate"  ,type=float,default=1e-5)
+    parser.add_argument("--nBatch" ,"-b",dest="nBatch",type=int,default=6)
+    parser.add_argument("--nGRU"   ,"-g",dest="nGRU"  ,type=int,default=1024)
+    parser.add_argument("--nLength","-l",dest="nLength"  ,type=int,default=30)
+    parser.add_argument("--learnRate",dest="learnRate"  ,type=float,default=1e-4)
     parser.add_argument("--doFineTune","-f",dest="doFineTune"  ,action="store_true")
     parser.add_argument("--reload","-r",dest="reload"  ,type=str,default=None)
-    parser.add_argument("--saveFolder","-s",dest="saveFolder"  ,type=str,default=None)
+    parser.add_argument("--saveFolder","-s",dest="saveFolder"  ,type=str,default="save")
     parser.add_argument("--test","-t",dest="test"  ,type=str,default=None)
     args = parser.parse_args()
 
