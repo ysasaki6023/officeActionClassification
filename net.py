@@ -143,6 +143,7 @@ class net(object):
                 cv2.waitKey(int(1000/fps))
             mov.release()
 
+
 if __name__=="__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--nBatch" ,"-b",dest="nBatch",type=int,default=6)
