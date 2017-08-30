@@ -122,14 +122,29 @@ class net(object):
                                 workers=1)
 
     def test(self,movPath):
-        for movFile in glob.glob(movPath):
+        actDict = {1:"drinking",2:"eating",3:"reading",4:"calling",5:"writing",6:"typing",7:"cleaning",8:"cheering",9:"sitting",10:"throwing",11:"gaming",12:"sleeping",13:"walking",14:"playing music",15:"standing up", 16:"sitting down"}
+        if movPath=="0":
+            movFileList = [0]
+        else:
+            movFileList = glob.glob(movPath)
+        for movFile in movFileList:
             mov = cv2.VideoCapture(movFile)
-            fps         = float(mov.get(cv2.CAP_PROP_FPS))
-            totalLength = int(mov.get(cv2.CAP_PROP_FRAME_COUNT))
-            actDict = {1:"drinking",2:"eating",3:"reading",4:"calling",5:"writing",6:"typing",7:"cleaning",8:"cheering",9:"sitting",10:"throwing",11:"gaming",12:"sleeping",13:"walking",14:"playing music",15:"standing up", 16:"sitting down"}
+            if movFile==0:
+                fps = 30
+                totalLength = 1000000000
+            else:
+                fps         = float(mov.get(cv2.CAP_PROP_FPS))
+                totalLength = int(mov.get(cv2.CAP_PROP_FRAME_COUNT))
             for _ in range(totalLength):
                 ret, frame = mov.read()
-                if not ret: continue
+                if not ret:
+                    print "ret is None"
+                    continue
+                if movFile==0:
+                    _,w,_ = frame.shape
+                    aspect = 4./3.
+                    h = w / aspect
+                    frame = frame[:,int(w/2-h/2):int(w/2+h/2)]
                 frame = cv2.resize(frame,(self.sizeX,self.sizeY))
                 t = self.model.predict(x=np.expand_dims(np.expand_dims(frame,axis=0),axis=0),batch_size=1)
                 v = t[0]
