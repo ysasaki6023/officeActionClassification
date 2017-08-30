@@ -57,24 +57,30 @@ class net(object):
             batchT = np.zeros( (self.nBatch, self.nActivities)        , dtype=np.int32)
             bIdx = 0
             while bIdx<self.nBatch:
-                try:
-                    path = random.choice(fileList)
-                    batchT[bIdx] = to_categorical(self.cvtPath2Cls(path),num_classes=self.nActivities)
-                    mov = cv2.VideoCapture(path)
-                    fps         = float(mov.get(cv2.CAP_PROP_FPS))
-                    totalLength = float(mov.get(cv2.CAP_PROP_FRAME_COUNT)) / fps
-                    shift_time = random.uniform(self.cut_before,totalLength - self.cut_after - float(self.nLength)/fps - 0.1 )
-                    mov.set(cv2.CAP_PROP_POS_MSEC,shift_time*1000)
-                    for tIdx in range(self.nLength):
-                        ret, frame = mov.read()
-                        if not ret: continue # 基本的に、長さ上は絶対に終端までは来ないので、retが帰ってこないのは単なるエラー
-                        #if tIdx==0: print mov.get(cv2.CAP_PROP_POS_FRAMES)
-                        frame = cv2.resize(frame,(self.sizeX,self.sizeY))
-                        batchX[bIdx,tIdx] = frame
-                    mov.release()
-                    bIdx += 1
-                except:
-                    continue
+                path = random.choice(fileList)
+                batchT[bIdx] = to_categorical(self.cvtPath2Cls(path),num_classes=self.nActivities)
+                mov = cv2.VideoCapture(path)
+                fps         = float(mov.get(cv2.CAP_PROP_FPS))
+                totalLength = float(mov.get(cv2.CAP_PROP_FRAME_COUNT)) / fps
+                shift_time = random.uniform(self.cut_before,totalLength - self.cut_after - float(self.nLength)/fps - 0.1 )
+                shift_w, shift_h = 0.1, 0.1
+                img_w, img_h = mov.get(cv2.CAP_PROP_FRAME_WIDTH),mov.get(cv2.CAP_PROP_FRAME_HEIGHT)
+                shift_x = random.uniform(-self.sizeX*shift_w,+self.sizeX*shift_w)
+                shift_y = random.uniform(-self.sizeY*shift_h,+self.sizeY*shift_h)
+                mov.set(cv2.CAP_PROP_POS_MSEC,shift_time*1000)
+                for tIdx in range(self.nLength):
+                    ret, frame = mov.read()
+                    if not ret: continue # 基本的に、長さ上は絶対に終端までは来ないので、retが帰ってこないのは単なるエラー
+                    frame = cv2.resize(frame,(int(self.sizeX*(1.+2*shift_w)),int(self.sizeY*(1.+2*shift_h))),interpolation=cv2.INTER_CUBIC)
+                    sizeH, sizeW, _ = frame.shape
+                    posX1 = int(sizeW/2.-self.sizeX/2.) + int(shift_x)
+                    posY1 = int(sizeH/2.-self.sizeY/2.) + int(shift_y)
+                    posX2 = posX1 + self.sizeX
+                    posY2 = posY1 + self.sizeY
+                    frame = frame[posY1:posY2,posX1:posX2]
+                    batchX[bIdx,tIdx] = frame
+                mov.release()
+                bIdx += 1
             yield ({"inX":batchX},{"cls":batchT})
 
     def reloadModel(self,fPath):
