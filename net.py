@@ -162,7 +162,7 @@ class net(object):
 if __name__=="__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--nBatch" ,"-b",dest="nBatch",type=int,default=6)
-    parser.add_argument("--nGRU"   ,"-g",dest="nGRU"  ,type=int,default=1024)
+    parser.add_argument("--nGRU"   ,"-g",dest="nGRU"  ,type=int,default=128)
     parser.add_argument("--nLength","-l",dest="nLength"  ,type=int,default=30)
     parser.add_argument("--learnRate",dest="learnRate"  ,type=float,default=1e-4)
     parser.add_argument("--doFineTune","-f",dest="doFineTune"  ,action="store_true")
