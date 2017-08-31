@@ -23,6 +23,8 @@ tensorflow_backend.set_session(session)
 
 class net(object):
     def __init__(self,isTraining=True,nBatch=1,nGRU=4096,nLength=60,learnRate=1e-5,saveFolder="save"):
+        #self.actDict = {1:"drinking",2:"eating",3:"reading",4:"calling",5:"writing",6:"typing",7:"cleaning",8:"cheering",9:"sitting",10:"throwing",11:"gaming",12:"sleeping",13:"walking",14:"playing music",15:"standing up", 16:"sitting down"}
+        self.actDict = {1:"drinking",2:"eating",3:"reading",4:"calling",5:"writing",6:"typing",9:"sitting",12:"sleeping",13:"walking"}
         self.nColor = 3
         self.sizeX = 192 # 640
         self.sizeY = 144 # 480
@@ -58,6 +60,7 @@ class net(object):
             bIdx = 0
             while bIdx<self.nBatch:
                 path = random.choice(fileList)
+                if not self.cvtPath2Cls(path) in self.actDict.keys(): continue
                 batchT[bIdx] = to_categorical(self.cvtPath2Cls(path),num_classes=self.nActivities)
                 mov = cv2.VideoCapture(path)
                 fps         = float(mov.get(cv2.CAP_PROP_FPS))
@@ -130,7 +133,7 @@ class net(object):
                                 workers=1)
 
     def test(self,movPath):
-        actDict = {1:"drinking",2:"eating",3:"reading",4:"calling",5:"writing",6:"typing",7:"cleaning",8:"cheering",9:"sitting",10:"throwing",11:"gaming",12:"sleeping",13:"walking",14:"playing music",15:"standing up", 16:"sitting down"}
+        actDict = self.actDict
         if movPath=="0":
             movFileList = [0]
         else:
