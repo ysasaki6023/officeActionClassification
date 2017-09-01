@@ -25,12 +25,13 @@ class net(object):
     def __init__(self,isTraining=True,nBatch=1,nGRU=4096,nLength=60,learnRate=1e-5,saveFolder="save"):
         #self.actDict = {1:"drinking",2:"eating",3:"reading",4:"calling",5:"writing",6:"typing",7:"cleaning",8:"cheering",9:"sitting",10:"throwing",11:"gaming",12:"sleeping",13:"walking",14:"playing music",15:"standing up", 16:"sitting down"}
         self.actDict = {1:"drinking",2:"eating",3:"reading",4:"calling",5:"writing",6:"typing",9:"sitting",12:"sleeping",13:"walking"}
+        self.convTable = self.actDict.keys()
         self.nColor = 3
         self.sizeX = 192 # 640
         self.sizeY = 144 # 480
         self.fps = 30
         self.fileList = glob.glob("../data/*.avi")
-        self.nActivities = 16
+        self.nActivities = len(self.convTable)
         self.doFineTune = args.doFineTune
 
         self.cut_before = 1.0 # sec

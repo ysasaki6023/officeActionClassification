@@ -15,7 +15,8 @@ import keras.backend as K
 from keras.callbacks import EarlyStopping, TensorBoard, ModelCheckpoint, ReduceLROnPlateau
 import tensorflow as tf
 from keras.backend import tensorflow_backend
-from keras.applications.inception_v3 import InceptionV3, preprocess_input
+from keras.applications.inception_v3 import InceptionV3
+from keras.applications.vgg16 import VGG16, preprocess_input
 
 config = tf.ConfigProto(gpu_options=tf.GPUOptions(allow_growth=True))
 session = tf.Session(config=config)
@@ -101,7 +102,8 @@ class net(object):
 
         input_shape = (self.nLength,self.sizeY,self.sizeX,self.nColor)
         inX = Input(input_shape,name="inX")
-        cnnModel = InceptionV3(weights="imagenet", include_top=False, pooling="max")
+        #cnnModel = InceptionV3(weights="imagenet", include_top=False, pooling="max")
+        cnnModel = VGG16(weights="imagenet", include_top=False)
 
         visModelAll = TimeDistributed(cnnModel)(inX)
         visFlatten  = Reshape((self.nLength,-1))(visModelAll)
@@ -178,7 +180,7 @@ class net(object):
 
 if __name__=="__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--nBatch" ,"-b",dest="nBatch",type=int,default=6)
+    parser.add_argument("--nBatch" ,"-b",dest="nBatch",type=int,default=4)
     parser.add_argument("--nGRU"   ,"-g",dest="nGRU"  ,type=int,default=128)
     parser.add_argument("--nLength","-l",dest="nLength"  ,type=int,default=30)
     parser.add_argument("--learnRate",dest="learnRate"  ,type=float,default=1e-4)
