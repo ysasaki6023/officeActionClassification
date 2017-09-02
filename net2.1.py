@@ -24,7 +24,7 @@ tensorflow_backend.set_session(session)
 class net(object):
     def __init__(self,isTraining=True,nBatch=1,nGRU=4096,nLength=60,learnRate=1e-5,saveFolder="save"):
         #self.actDict = {1:"drinking",2:"eating",3:"reading",4:"calling",5:"writing",6:"typing",7:"cleaning",8:"cheering",9:"sitting",10:"throwing",11:"gaming",12:"sleeping",13:"walking",14:"playing music",15:"standing up", 16:"sitting down"}
-        self.actDict = {1:"drinking",2:"eating",3:"reading",4:"calling",5:"writing",6:"typing",13:"walking"}
+        self.actDict = {1:"drinking",2:"eating",3:"reading",4:"calling",5:"writing",6:"typing",9:"sitting",12:"sleeping",13:"walking"}
         self.convTable = self.actDict.keys()
         self.nColor = 3
         self.sizeX = 192 # 640
@@ -44,7 +44,7 @@ class net(object):
         self.saveFolder = saveFolder
         self.isTraining = isTraining
         #if isTraining:
-        #self.buildModel()
+        self.buildModel()
         return
 
     def cvtPath2Cls(self,path):
@@ -215,8 +215,8 @@ if __name__=="__main__":
                 learnRate=0,
                 isTraining=False,
                 saveFolder=None)
-        #n.reloadModel(args.reload)
-        n.loadModel(args.reload)
+        n.reloadModel(args.reload)
+        #n.loadModel(args.reload)
         n.test(args.test,args.testSave)
     else:
         n = net(nBatch=args.nBatch,
@@ -224,7 +224,6 @@ if __name__=="__main__":
                 nLength=args.nLength,
                 learnRate=args.learnRate,
                 saveFolder=args.saveFolder)
-        n.buildModel()
         if args.reload:
             n.reloadModel(args.reload)
         n.train()

@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 from gensim import corpora, models, similarities
 from gensim.models import word2vec
-from keras.layers import Input, Dense, LSTM, merge, Lambda, GRU, Dot, Reshape, Concatenate, Flatten, Dropout, Bidirectional, TimeDistributed, Activation
+from keras.layers import Input, Dense, LSTM, merge, Lambda, GRU, Dot, Reshape, Concatenate, Flatten, Dropout, Bidirectional, TimeDistributed, Activation, Conv3D, MaxPooling3D, GlobalMaxPooling2D, MaxPooling1D, GlobalAveragePooling1D, BatchNormalization
 from keras.utils import to_categorical
 from keras.constraints import min_max_norm
 from keras.models import Model, Sequential, load_model
@@ -107,26 +107,34 @@ class net(object):
         print "model loaded from %s"%fPath
      
     def buildModel(self):
-        #K.set_learning_phase(True)
-
         input_shape = (self.nLength,self.sizeY,self.sizeX,self.nColor)
         inX = Input(input_shape,name="inX")
-        cnnModel = InceptionV3(weights="imagenet", include_top=False, pooling="max")
+        h = BatchNormalization(axis=-1)(inX)
+        h = Conv3D( 64,(5,5,5),strides=(2,1,1),activation="relu")(h)
+        h = MaxPooling3D(pool_size=(1,2,2),padding="same")(h)
+        h = Conv3D(128,(5,5,5),activation="relu")(h)
+        h = MaxPooling3D(pool_size=(1,2,2),padding="same")(h)
+        h = BatchNormalization(axis=-1)(h)
+        h = Conv3D(256,(5,3,3),activation="relu")(h)
+        h = MaxPooling3D(pool_size=(1,2,2),padding="same")(h)
+        h = BatchNormalization(axis=-1)(h)
+        h = Conv3D(512,(3,5,5),strides=(1,2,2), activation="relu")(h)
+        h = MaxPooling3D(pool_size=(1,2,2),padding="same")(h)
 
-        visModelAll = TimeDistributed(cnnModel)(inX)
-        visFlatten  = Reshape((self.nLength,-1))(visModelAll)
-        gruModel    = GRU(self.nGRU)(visFlatten)
-        gruModel    = Dropout(0.5)(gruModel)
-        logits      = Dense(self.nActivities)(gruModel)
+        n_b, n_l, n_h, n_w, n_f = K.int_shape(h)
+        h = Reshape((-1,n_f))(h)
+        h = GlobalAveragePooling1D()(h)
+        h = Activation("relu")(h)
+        h = Dropout(0.5)(h)
+        logits = Dense(self.nActivities)(h)
         output      = Activation("softmax",name="cls")(logits)
+
+        #gruModel    = GRU(self.nGRU)(h)
+        #gruModel    = Dropout(0.5)(gruModel)
 
         model = Model(inputs=inX, outputs=output)
 
         model.compile(loss="categorical_crossentropy",optimizer=Adam(self.learnRate),metrics=["accuracy"])
-
-        if not self.doFineTune:
-            for layer in cnnModel.layers:
-                layer.trainable = False
 
         model.summary()
         self.model = model
@@ -196,7 +204,7 @@ class net(object):
 
 if __name__=="__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--nBatch" ,"-b",dest="nBatch",type=int,default=6)
+    parser.add_argument("--nBatch" ,"-b",dest="nBatch",type=int,default=8)
     parser.add_argument("--nGRU"   ,"-g",dest="nGRU"  ,type=int,default=128)
     parser.add_argument("--nLength","-l",dest="nLength"  ,type=int,default=30)
     parser.add_argument("--learnRate",dest="learnRate"  ,type=float,default=1e-5)
