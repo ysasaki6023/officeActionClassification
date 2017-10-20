@@ -9,4 +9,6 @@
 - analysis.pyに対して、../../data/a01\_s07\_e02\_rgb.aviという形に展開
 
 ## trial2実行前準備
-- analysis.pyに対して、model/model.h5となるよう、以下からdeepPoseのモデルをダウンロード: https://github.com/michalfaber/keras\_Realtime\_Multi-Person\_Pose\_Estimation
+- analysis.pyに対して、model/model.h5となるよう、以下からdeepPoseのモデルをダウンロード:
+https://www.dropbox.com/s/llpxd14is7gyj0z/model.h5
+https://github.com/michalfaber/keras\_Realtime\_Multi-Person\_Pose\_Estimation
